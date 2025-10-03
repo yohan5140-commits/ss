@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>투두 리스트</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app">
+      <section class="todo">
+        <header class="todo__header">
+          <h1 class="todo__title">투두 리스트</h1>
+          <form class="todo__form" id="todo-form">
+            <input
+              type="text"
+              id="todo-input"
+              class="todo__input"
+              placeholder="할 일을 입력하세요"
+              aria-label="새 할 일"
+              required
+            />
+            <button type="submit" class="todo__button">추가</button>
+          </form>
+        </header>
+        <ul class="todo__list" id="todo-list" aria-live="polite"></ul>
+        <footer class="todo__footer">
+          <span id="todo-count">0개의 할 일이 남았습니다.</span>
+          <button type="button" id="clear-completed" class="todo__clear">
+            완료 항목 삭제
+          </button>
+        </footer>
+      </section>
+    </main>
+    <template id="todo-item-template">
+      <li class="todo-item">
+        <label class="todo-item__body">
+          <input type="checkbox" class="todo-item__checkbox" />
+          <span class="todo-item__text"></span>
+        </label>
+        <button type="button" class="todo-item__delete" aria-label="할 일 삭제">
+          ✕
+        </button>
+      </li>
+    </template>
+    <script src="script.js" defer></script>
+  </body>
+</html>
