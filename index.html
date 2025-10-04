@@ -321,7 +321,7 @@
 </div>
 <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=ddb69465a0741801bbe0bd3885c5e7d9"></script>
 <script>
-    (function () {
+    kakao.maps.load(function () {
         var domain = 'https://i1.daumcdn.net';
         var path = '/dmaps/apis/openapi/sampleimg/';
 
@@ -549,6 +549,9 @@
             updateActionButtonStates();
             if (isShelfEditMode) {
                 updateShelfSummary();
+                if (!selectedShelf && shelfLayouts.length > 0) {
+                    selectShelf(shelfLayouts[0]);
+                }
             }
         });
 
@@ -911,7 +914,7 @@
 
         var infowindow = new kakao.maps.InfoWindow({content: '도서관에 오신 것을 환영합니다!'});
         infowindow.open(map, marker);
-    })();
+    });
 </script>
 </body>
 </html>
