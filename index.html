@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8">
+    <title>도서관 배치도</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Noto+Sans+KR:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Noto Sans KR', Arial, sans-serif;
+            background: #f6f7fb;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        h1 {
+            margin: 24px 0 12px;
+            font-size: 28px;
+        }
+
+        #map {
+            width: min(960px, 90vw);
+            height: 540px;
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+            border: 6px solid #fff;
+        }
+
+        .legend {
+            width: min(960px, 90vw);
+            box-sizing: border-box;
+            padding: 16px 20px;
+            margin: 18px auto 24px;
+            background: #fff;
+            border-radius: 14px;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 12px;
+        }
+
+        .legend h2 {
+            margin: 0 0 6px;
+            font-size: 18px;
+        }
+
+        .legend ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .legend li {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 6px 0;
+            font-size: 14px;
+        }
+
+        .color-box {
+            width: 18px;
+            height: 18px;
+            border-radius: 4px;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .control-panel {
+            width: min(960px, 90vw);
+            margin: 0 auto 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .control-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .control-button {
+            background: linear-gradient(135deg, #1890ff, #5cdbd3);
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            padding: 11px 18px;
+            cursor: pointer;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+            box-shadow: 0 8px 16px rgba(24, 144, 255, 0.25);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .control-button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 20px rgba(24, 144, 255, 0.3);
+        }
+
+        .control-button:disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+            box-shadow: none;
+        }
+
+        .control-button.secondary {
+            background: linear-gradient(135deg, #13c2c2, #36cfc9);
+            box-shadow: 0 8px 16px rgba(19, 194, 194, 0.25);
+        }
+
+        .control-button.danger {
+            background: linear-gradient(135deg, #ff4d4f, #ff7a45);
+            box-shadow: 0 8px 16px rgba(255, 77, 79, 0.28);
+        }
+
+        .control-button.active {
+            background: linear-gradient(135deg, #722ed1, #5cdbd3);
+            box-shadow: 0 10px 22px rgba(114, 46, 209, 0.3);
+        }
+
+        .edit-hint {
+            background: #fff7e6;
+            border-left: 4px solid #ffa940;
+            padding: 12px 16px;
+            border-radius: 12px;
+            color: #ad6800;
+            font-size: 13px;
+            line-height: 1.6;
+            box-shadow: 0 4px 14px rgba(255, 169, 64, 0.18);
+        }
+
+        .edit-hint strong {
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .shelf-list {
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+            padding: 18px 22px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .shelf-list h2 {
+            margin: 0;
+            font-size: 18px;
+        }
+
+        .shelf-list ul {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 8px;
+        }
+
+        .shelf-list button {
+            width: 100%;
+            border: 1px solid #d6e4ff;
+            border-radius: 10px;
+            background: #f7f9fc;
+            color: #1f1f1f;
+            font-size: 13px;
+            padding: 10px 12px;
+            cursor: pointer;
+            text-align: left;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: border-color 0.15s ease, background 0.15s ease;
+        }
+
+        .shelf-list button:hover {
+            background: #e6f7ff;
+            border-color: #91d5ff;
+        }
+
+        .shelf-list button.active {
+            border-color: #722ed1;
+            background: #f9f0ff;
+            color: #531dab;
+        }
+
+        .shelf-list button span {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .shelf-list button span:last-child {
+            font-size: 12px;
+            color: #8c8c8c;
+        }
+
+        .shelf-color {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .shelf-summary {
+            width: min(960px, 90vw);
+            margin: 0 auto 40px;
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+            padding: 20px 24px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .shelf-summary h2 {
+            margin: 0;
+            font-size: 18px;
+        }
+
+        .shelf-summary p {
+            margin: 0;
+            font-size: 13px;
+            color: #6b778c;
+            line-height: 1.7;
+        }
+
+        .shelf-summary textarea {
+            width: 100%;
+            height: 200px;
+            resize: vertical;
+            border-radius: 12px;
+            border: 1px solid #d6e4ff;
+            background: #f7f9fc;
+            padding: 12px 14px;
+            box-sizing: border-box;
+            font-family: 'Fira Code', 'Courier New', monospace;
+            font-size: 12px;
+            color: #172b4d;
+        }
+
+        .shelf-label {
+            background: rgba(0, 0, 0, 0.75);
+            color: #fff;
+            padding: 4px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+<h1>시립 도서관 2층 배치도</h1>
+<div id="map"></div>
+<div class="legend">
+    <div>
+        <h2>자료 공간</h2>
+        <ul>
+            <li><span class="color-box" style="background:#91d5ff"></span> 종합 자료실</li>
+            <li><span class="color-box" style="background:#b7eb8f"></span> 어린이 자료실</li>
+            <li><span class="color-box" style="background:#ffe58f"></span> 디지털 학습실</li>
+        </ul>
+    </div>
+    <div>
+        <h2>이용 공간</h2>
+        <ul>
+            <li><span class="color-box" style="background:#ffd6e7"></span> 휴게 라운지</li>
+            <li><span class="color-box" style="background:#d3adf7"></span> 열람실</li>
+        </ul>
+    </div>
+    <div>
+        <h2>편의 시설</h2>
+        <ul>
+            <li><span class="color-box" style="background:#ff4d4f"></span> 안내 데스크</li>
+            <li><span class="color-box" style="background:#52c41a"></span> 비상구</li>
+        </ul>
+    </div>
+    <div>
+        <h2>서가</h2>
+        <ul>
+            <li><span class="color-box" style="background:#8c8c8c"></span> 일반 서가</li>
+            <li><span class="color-box" style="background:#13c2c2"></span> 추천 도서존</li>
+        </ul>
+    </div>
+</div>
+<div class="control-panel">
+    <div class="control-row">
+        <button id="toggleEdit" type="button" class="control-button">서가 배치 편집 모드</button>
+        <button id="addShelf" type="button" class="control-button secondary" disabled>새 서가 추가</button>
+        <button id="removeShelf" type="button" class="control-button danger" disabled>선택 서가 삭제</button>
+        <button id="copyShelfData" type="button" class="control-button" disabled>좌표 복사</button>
+    </div>
+    <div id="editHint" class="edit-hint hidden">
+        <strong>편집 모드 사용법</strong>
+        서가를 클릭하면 선택되고, 모서리 포인트를 드래그하여 영역을 조정할 수 있습니다. "새 서가 추가"를 누른 뒤 지도에서 위치를 클릭하면 기본 크기의 서가가 생성됩니다.
+    </div>
+    <div id="shelfList" class="shelf-list hidden">
+        <h2>서가 목록</h2>
+        <ul id="shelfListItems"></ul>
+    </div>
+</div>
+<div id="shelfSummary" class="shelf-summary hidden">
+    <h2>서가 좌표 미리보기</h2>
+    <p>조정된 서가 영역 좌표가 아래 JSON 형식으로 표시됩니다. 필요한 경우 복사해 내부 배치 데이터로 활용하세요.</p>
+    <textarea id="shelfSummaryText" readonly></textarea>
+</div>
+<script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=ddb69465a0741801bbe0bd3885c5e7d9"></script>
+<script>
+    kakao.maps.load(function () {
+        var domain = 'https://i1.daumcdn.net';
+        var path = '/dmaps/apis/openapi/sampleimg/';
+
+        function plan(x, y, z) {
+            y = -y - 1;
+            var limit = Math.ceil(3 / Math.pow(2, z));
+            if (0 <= y && y < limit && 0 <= x && x < limit) {
+                return domain + path + 'planh' + z + '_' + y + '_' + x + '.png';
+            }
+            return 'https://i1.daumcdn.net/dmaps/apis/white.png';
+        }
+
+        kakao.maps.Tileset.add('PLAN', new kakao.maps.Tileset(512, 512, plan, '', false, 0, 2));
+
+        var node = document.getElementById('map');
+        var map = new kakao.maps.Map(node, {
+            projectionId: null,
+            mapTypeId: kakao.maps.MapTypeId.PLAN,
+            $scale: false,
+            center: new kakao.maps.Coords(650, -550),
+            level: 2
+        });
+
+        var sections = [
+            {
+                name: '종합 자료실',
+                color: '#91d5ff',
+                path: [
+                    new kakao.maps.Coords(530, -650),
+                    new kakao.maps.Coords(720, -650),
+                    new kakao.maps.Coords(720, -520),
+                    new kakao.maps.Coords(530, -520)
+                ],
+                description: '일반 도서 및 신간이 배치된 공간입니다.'
+            },
+            {
+                name: '어린이 자료실',
+                color: '#b7eb8f',
+                path: [
+                    new kakao.maps.Coords(720, -650),
+                    new kakao.maps.Coords(860, -650),
+                    new kakao.maps.Coords(860, -520),
+                    new kakao.maps.Coords(720, -520)
+                ],
+                description: '그림책과 동화책, 독후활동 공간이 마련되어 있습니다.'
+            },
+            {
+                name: '디지털 학습실',
+                color: '#ffe58f',
+                path: [
+                    new kakao.maps.Coords(530, -520),
+                    new kakao.maps.Coords(680, -520),
+                    new kakao.maps.Coords(680, -430),
+                    new kakao.maps.Coords(530, -430)
+                ],
+                description: '전자 자료 열람 PC와 멀티미디어 장비를 이용할 수 있습니다.'
+            },
+            {
+                name: '휴게 라운지',
+                color: '#ffd6e7',
+                path: [
+                    new kakao.maps.Coords(680, -520),
+                    new kakao.maps.Coords(860, -520),
+                    new kakao.maps.Coords(860, -430),
+                    new kakao.maps.Coords(680, -430)
+                ],
+                description: '간단한 음료와 휴식을 취할 수 있는 공간입니다.'
+            },
+            {
+                name: '열람실',
+                color: '#d3adf7',
+                path: [
+                    new kakao.maps.Coords(530, -430),
+                    new kakao.maps.Coords(860, -430),
+                    new kakao.maps.Coords(860, -320),
+                    new kakao.maps.Coords(530, -320)
+                ],
+                description: '조용한 학습 공간으로, 개인석과 그룹석이 준비되어 있습니다.'
+            }
+        ];
+
+        sections.forEach(function (section) {
+            var polygon = new kakao.maps.Polygon({
+                map: map,
+                path: section.path,
+                strokeWeight: 2,
+                strokeColor: toRGBA(section.color, 0.9),
+                strokeOpacity: 1,
+                fillColor: toRGBA(section.color, 0.5),
+                fillOpacity: 1
+            });
+
+            new kakao.maps.CustomOverlay({
+                map: map,
+                position: calculateCenter(section.path),
+                content: '<div style="padding:8px 12px;background:#fff;border-radius:8px;box-shadow:0 4px 8px rgba(0,0,0,0.12);font-size:13px;font-weight:600;">' + section.name + '</div>',
+                yAnchor: 1.5
+            });
+
+            var infoWindow = new kakao.maps.InfoWindow({
+                content: '<div style="padding:10px 14px;font-size:13px;max-width:220px;"><strong>' + section.name + '</strong><br>' + section.description + '</div>'
+            });
+
+            kakao.maps.event.addListener(polygon, 'mouseover', function (mouseEvent) {
+                polygon.setOptions({fillColor: toRGBA(section.color, 0.8)});
+                infoWindow.setPosition(mouseEvent.latLng);
+                infoWindow.open(map);
+            });
+
+            kakao.maps.event.addListener(polygon, 'mousemove', function (mouseEvent) {
+                infoWindow.setPosition(mouseEvent.latLng);
+            });
+
+            kakao.maps.event.addListener(polygon, 'mouseout', function () {
+                polygon.setOptions({fillColor: toRGBA(section.color, 0.5)});
+                infoWindow.close();
+            });
+        });
+
+        var facilities = [
+            {name: '안내 데스크', position: new kakao.maps.Coords(575, -600), color: '#ff4d4f'},
+            {name: '비상구', position: new kakao.maps.Coords(840, -330), color: '#52c41a'},
+            {name: '비상구', position: new kakao.maps.Coords(545, -330), color: '#52c41a'}
+        ];
+
+        facilities.forEach(function (facility) {
+            new kakao.maps.Marker({map: map, position: facility.position});
+            new kakao.maps.CustomOverlay({
+                map: map,
+                position: facility.position,
+                content: '<div style="background:' + facility.color + ';color:#fff;padding:6px 10px;border-radius:12px;font-size:12px;font-weight:600;box-shadow:0 3px 8px rgba(0,0,0,0.18);">' + facility.name + '</div>',
+                yAnchor: 1.6
+            });
+        });
+
+        var shelfHandleSVG = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8" fill="#1890ff" stroke="#ffffff" stroke-width="3" /></svg>';
+        var shelfHandleImage = new kakao.maps.MarkerImage(
+            'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(shelfHandleSVG),
+            new kakao.maps.Size(20, 20),
+            {offset: new kakao.maps.Point(10, 10)}
+        );
+
+        var shelfLayoutData = [
+            {
+                name: 'A열-1',
+                color: '#8c8c8c',
+                points: [
+                    {x: 548, y: -640},
+                    {x: 598, y: -640},
+                    {x: 598, y: -606},
+                    {x: 548, y: -606}
+                ]
+            },
+            {
+                name: 'A열-2',
+                color: '#8c8c8c',
+                points: [
+                    {x: 603, y: -640},
+                    {x: 653, y: -640},
+                    {x: 653, y: -606},
+                    {x: 603, y: -606}
+                ]
+            },
+            {
+                name: 'B열-1',
+                color: '#8c8c8c',
+                points: [
+                    {x: 548, y: -600},
+                    {x: 598, y: -600},
+                    {x: 598, y: -562},
+                    {x: 548, y: -562}
+                ]
+            },
+            {
+                name: '추천 도서존',
+                color: '#13c2c2',
+                points: [
+                    {x: 700, y: -500},
+                    {x: 760, y: -500},
+                    {x: 760, y: -450},
+                    {x: 700, y: -450}
+                ]
+            }
+        ];
+
+        var shelfLayouts = [];
+        var selectedShelf = null;
+        var isShelfEditMode = false;
+        var isAwaitingShelfPlacement = false;
+        var nextShelfId = 1;
+        var shelfNameSequence = shelfLayoutData.length + 1;
+
+        var toggleEditButton = document.getElementById('toggleEdit');
+        var addShelfButton = document.getElementById('addShelf');
+        var removeShelfButton = document.getElementById('removeShelf');
+        var copyShelfDataButton = document.getElementById('copyShelfData');
+        var editHint = document.getElementById('editHint');
+        var shelfListContainer = document.getElementById('shelfList');
+        var shelfListItems = document.getElementById('shelfListItems');
+        var shelfSummary = document.getElementById('shelfSummary');
+        var shelfSummaryText = document.getElementById('shelfSummaryText');
+        var editHintDefaultHTML = editHint.innerHTML;
+
+        shelfLayoutData.forEach(function (data) {
+            createShelfLayout(data);
+        });
+        renderShelfList();
+        updateShelfSummary();
+        updateActionButtonStates();
+
+        toggleEditButton.addEventListener('click', function () {
+            isShelfEditMode = !isShelfEditMode;
+            toggleEditButton.classList.toggle('active', isShelfEditMode);
+            toggleEditButton.textContent = isShelfEditMode ? '편집 모드 종료' : '서가 배치 편집 모드';
+            editHint.classList.toggle('hidden', !isShelfEditMode);
+            shelfSummary.classList.toggle('hidden', !isShelfEditMode);
+            shelfListContainer.classList.toggle('hidden', !isShelfEditMode);
+            if (!isShelfEditMode) {
+                addShelfButton.classList.remove('active');
+                isAwaitingShelfPlacement = false;
+                editHint.innerHTML = editHintDefaultHTML;
+                deselectShelf();
+            }
+            setShelfEditMode(isShelfEditMode);
+            updateActionButtonStates();
+            if (isShelfEditMode) {
+                updateShelfSummary();
+                if (!selectedShelf && shelfLayouts.length > 0) {
+                    selectShelf(shelfLayouts[0]);
+                }
+            }
+        });
+
+        addShelfButton.addEventListener('click', function () {
+            if (!isShelfEditMode) {
+                return;
+            }
+            isAwaitingShelfPlacement = !isAwaitingShelfPlacement;
+            addShelfButton.classList.toggle('active', isAwaitingShelfPlacement);
+            editHint.innerHTML = isAwaitingShelfPlacement
+                ? editHintDefaultHTML + '<div style="margin-top:6px;font-weight:600;">지도에서 원하는 위치를 클릭하면 새 서가가 생성됩니다.</div>'
+                : editHintDefaultHTML;
+        });
+
+        removeShelfButton.addEventListener('click', function () {
+            if (!isShelfEditMode || !selectedShelf) {
+                return;
+            }
+            removeShelf(selectedShelf);
+        });
+
+        copyShelfDataButton.addEventListener('click', function () {
+            if (!isShelfEditMode) {
+                return;
+            }
+            var value = shelfSummaryText.value;
+            if (!value) {
+                return;
+            }
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(value).then(function () {
+                    temporarilyShowCopyFeedback();
+                }).catch(function () {
+                    fallbackCopy(value);
+                });
+            } else {
+                fallbackCopy(value);
+            }
+        });
+
+        function fallbackCopy(value) {
+            if (!shelfSummaryText) {
+                return;
+            }
+            shelfSummaryText.focus();
+            shelfSummaryText.select();
+            try {
+                var successful = document.execCommand('copy');
+                if (successful) {
+                    temporarilyShowCopyFeedback();
+                }
+            } catch (err) {
+            }
+            window.getSelection().removeAllRanges();
+        }
+
+        function temporarilyShowCopyFeedback() {
+            var original = copyShelfDataButton.textContent;
+            copyShelfDataButton.textContent = '복사 완료!';
+            copyShelfDataButton.disabled = true;
+            setTimeout(function () {
+                copyShelfDataButton.textContent = original;
+                updateActionButtonStates();
+            }, 1600);
+        }
+
+        kakao.maps.event.addListener(map, 'click', function (mouseEvent) {
+            if (!isShelfEditMode || !isAwaitingShelfPlacement) {
+                return;
+            }
+            var centerCoords = mouseEvent.latLng;
+            var width = 40;
+            var height = 28;
+            var newShelf = createShelfLayout({
+                name: '새 서가 ' + (shelfNameSequence++),
+                color: '#8c8c8c',
+                points: buildRectanglePoints(centerCoords.getX(), centerCoords.getY(), width, height)
+            });
+            setShelfEditMode(true);
+            selectShelf(newShelf);
+            renderShelfList();
+            updateShelfSummary();
+            isAwaitingShelfPlacement = false;
+            addShelfButton.classList.remove('active');
+            editHint.innerHTML = editHintDefaultHTML;
+        });
+
+        function buildRectanglePoints(centerX, centerY, width, height) {
+            var halfW = width / 2;
+            var halfH = height / 2;
+            return [
+                {x: centerX - halfW, y: centerY - halfH},
+                {x: centerX + halfW, y: centerY - halfH},
+                {x: centerX + halfW, y: centerY + halfH},
+                {x: centerX - halfW, y: centerY + halfH}
+            ];
+        }
+
+        function createShelfLayout(data) {
+            var layoutId = data.id || 'shelf-' + (nextShelfId++);
+            var layoutName = data.name || ('새 서가 ' + (shelfNameSequence++));
+            var color = data.color || '#8c8c8c';
+            var points = data.points.map(function (point) {
+                return {x: point.x, y: point.y};
+            });
+            var coordsPath = points.map(function (point) {
+                return new kakao.maps.Coords(point.x, point.y);
+            });
+            var polygon = new kakao.maps.Polygon({
+                map: map,
+                path: coordsPath,
+                strokeWeight: 1.5,
+                strokeColor: toRGBA(color, 0.95),
+                strokeOpacity: 1,
+                fillColor: toRGBA(color, 0.35),
+                fillOpacity: 1,
+                zIndex: 2
+            });
+            var overlay = new kakao.maps.CustomOverlay({
+                map: map,
+                position: calculateCenter(coordsPath),
+                content: '<div class="shelf-label">' + layoutName + '</div>',
+                yAnchor: 1.2,
+                zIndex: 3
+            });
+
+            var layout = {
+                id: layoutId,
+                name: layoutName,
+                color: color,
+                points: points,
+                polygon: polygon,
+                overlay: overlay,
+                handles: []
+            };
+
+            kakao.maps.event.addListener(polygon, 'click', function () {
+                if (!isShelfEditMode) {
+                    return;
+                }
+                selectShelf(layout);
+            });
+
+            shelfLayouts.push(layout);
+            return layout;
+        }
+
+        function removeShelf(layout) {
+            removeHandles(layout);
+            layout.polygon.setMap(null);
+            layout.overlay.setMap(null);
+            var index = shelfLayouts.indexOf(layout);
+            if (index > -1) {
+                shelfLayouts.splice(index, 1);
+            }
+            var removedSelected = selectedShelf === layout;
+            if (removedSelected) {
+                selectedShelf = null;
+            }
+            renderShelfList();
+            updateShelfSummary();
+            if (removedSelected && isShelfEditMode && shelfLayouts.length > 0) {
+                selectShelf(shelfLayouts[0]);
+            } else {
+                updateActionButtonStates();
+            }
+        }
+
+        function selectShelf(layout) {
+            if (selectedShelf === layout) {
+                updateActionButtonStates();
+                return;
+            }
+            if (selectedShelf) {
+                selectedShelf.polygon.setOptions({
+                    strokeColor: toRGBA(selectedShelf.color, 0.95),
+                    fillColor: toRGBA(selectedShelf.color, isShelfEditMode ? 0.22 : 0.35)
+                });
+            }
+            selectedShelf = layout;
+            if (selectedShelf) {
+                selectedShelf.polygon.setOptions({
+                    strokeColor: '#722ed1',
+                    fillColor: toRGBA(selectedShelf.color, 0.3)
+                });
+            }
+            renderShelfList();
+            updateActionButtonStates();
+        }
+
+        function deselectShelf() {
+            if (!selectedShelf) {
+                renderShelfList();
+                updateActionButtonStates();
+                return;
+            }
+            selectedShelf.polygon.setOptions({
+                strokeColor: toRGBA(selectedShelf.color, 0.95),
+                fillColor: toRGBA(selectedShelf.color, 0.35)
+            });
+            selectedShelf = null;
+            renderShelfList();
+            updateActionButtonStates();
+        }
+
+        function buildHandles(layout) {
+            if (layout.handles.length > 0) {
+                return;
+            }
+            layout.points.forEach(function (point, index) {
+                var marker = new kakao.maps.Marker({
+                    map: map,
+                    position: new kakao.maps.Coords(point.x, point.y),
+                    draggable: true,
+                    image: shelfHandleImage,
+                    zIndex: 4
+                });
+
+                kakao.maps.event.addListener(marker, 'drag', function () {
+                    var pos = marker.getPosition();
+                    layout.points[index] = {x: pos.getX(), y: pos.getY()};
+                    updateShelfGeometry(layout);
+                    updateShelfSummary();
+                });
+
+                kakao.maps.event.addListener(marker, 'dragend', function () {
+                    var pos = marker.getPosition();
+                    layout.points[index] = {x: pos.getX(), y: pos.getY()};
+                    updateShelfGeometry(layout);
+                    updateShelfSummary();
+                });
+
+                layout.handles.push(marker);
+            });
+        }
+
+        function removeHandles(layout) {
+            layout.handles.forEach(function (marker) {
+                marker.setMap(null);
+            });
+            layout.handles = [];
+        }
+
+        function setShelfEditMode(enabled) {
+            shelfLayouts.forEach(function (layout) {
+                if (enabled) {
+                    buildHandles(layout);
+                    layout.polygon.setOptions({
+                        strokeWeight: layout === selectedShelf ? 3.5 : 3,
+                        fillColor: toRGBA(layout.color, layout === selectedShelf ? 0.3 : 0.22)
+                    });
+                } else {
+                    removeHandles(layout);
+                    layout.polygon.setOptions({
+                        strokeWeight: 1.5,
+                        strokeColor: toRGBA(layout.color, 0.95),
+                        fillColor: toRGBA(layout.color, 0.35)
+                    });
+                }
+            });
+        }
+
+        function renderShelfList() {
+            if (!shelfListItems) {
+                return;
+            }
+            shelfListItems.innerHTML = '';
+            if (shelfLayouts.length === 0) {
+                var emptyItem = document.createElement('li');
+                emptyItem.style.fontSize = '13px';
+                emptyItem.style.color = '#8c8c8c';
+                emptyItem.textContent = '등록된 서가가 없습니다.';
+                shelfListItems.appendChild(emptyItem);
+                return;
+            }
+            shelfLayouts.forEach(function (layout) {
+                var item = document.createElement('li');
+                var button = document.createElement('button');
+                button.type = 'button';
+                button.innerHTML = '<span><span class="shelf-color" style="background:' + layout.color + '"></span>' + layout.name + '</span><span>' + layout.points.length + '점</span>';
+                if (layout === selectedShelf) {
+                    button.classList.add('active');
+                }
+                button.addEventListener('click', function () {
+                    if (!isShelfEditMode) {
+                        toggleEditButton.click();
+                    }
+                    selectShelf(layout);
+                });
+                item.appendChild(button);
+                shelfListItems.appendChild(item);
+            });
+        }
+
+        function updateShelfGeometry(layout) {
+            var coordsPath = layout.points.map(function (point) {
+                return new kakao.maps.Coords(point.x, point.y);
+            });
+            layout.polygon.setPath(coordsPath);
+            layout.overlay.setPosition(calculateCenter(coordsPath));
+            if (layout.handles.length === layout.points.length) {
+                layout.handles.forEach(function (marker, index) {
+                    marker.setPosition(coordsPath[index]);
+                });
+            }
+        }
+
+        function updateShelfSummary() {
+            if (!shelfSummaryText) {
+                return;
+            }
+            var summary = shelfLayouts.map(function (layout) {
+                return {
+                    name: layout.name,
+                    points: layout.points.map(function (point) {
+                        return {
+                            x: Number(point.x.toFixed(2)),
+                            y: Number(point.y.toFixed(2))
+                        };
+                    })
+                };
+            });
+            shelfSummaryText.value = JSON.stringify(summary, null, 2);
+            updateActionButtonStates();
+        }
+
+        function updateActionButtonStates() {
+            addShelfButton.disabled = !isShelfEditMode;
+            removeShelfButton.disabled = !isShelfEditMode || !selectedShelf;
+            copyShelfDataButton.disabled = !isShelfEditMode || shelfLayouts.length === 0;
+        }
+
+        function calculateCenter(path) {
+            var sumX = 0;
+            var sumY = 0;
+            path.forEach(function (coord) {
+                sumX += coord.getX();
+                sumY += coord.getY();
+            });
+            return new kakao.maps.Coords(sumX / path.length, sumY / path.length);
+        }
+
+        function toRGBA(hex, alpha) {
+            var raw = hex.replace('#', '');
+            if (raw.length === 3) {
+                raw = raw.split('').map(function (c) {
+                    return c + c;
+                }).join('');
+            }
+            var bigint = parseInt(raw, 16);
+            var r = (bigint >> 16) & 255;
+            var g = (bigint >> 8) & 255;
+            var b = bigint & 255;
+            return 'rgba(' + [r, g, b].join(',') + ',' + alpha + ')';
+        }
+
+        var center = map.getCenter();
+        var marker = new kakao.maps.Marker({position: center});
+        marker.setMap(map);
+
+        var infowindow = new kakao.maps.InfoWindow({content: '도서관에 오신 것을 환영합니다!'});
+        infowindow.open(map, marker);
+    });
+</script>
+</body>
+</html>
